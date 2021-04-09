@@ -9,11 +9,8 @@ import eu.europa.esig.dss.model.ToBeSigned;
 import eu.europa.esig.dss.model.x509.CertificateToken;
 import eu.europa.esig.dss.pades.PAdESSignatureParameters;
 import eu.europa.esig.dss.pades.signature.PAdESService;
-import eu.europa.esig.dss.spi.DSSUtils;
-import eu.europa.esig.dss.spi.x509.tsp.TSPSource;
 import eu.europa.esig.dss.token.DSSPrivateKeyEntry;
 import eu.europa.esig.dss.token.Pkcs12SignatureToken;
-import eu.europa.esig.dss.utils.Utils;
 import eu.europa.esig.dss.validation.CommonCertificateVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.security.KeyStore;
-import java.security.cert.CertificateException;
 import java.util.List;
 
 @RestController
@@ -34,8 +30,9 @@ public class ESignatureController {
 
     private static final Logger logger = LoggerFactory.getLogger(ESignatureController.class);
 
-    @GetMapping("/api/sign-pdf")  // TODO test
-    public ResponseEntity<InputStreamResource> getTest() throws IOException, CertificateException {
+    @GetMapping("/api/sign-pdf")
+    public ResponseEntity<InputStreamResource> getTest() throws IOException {
+        logger.info("Starting to sign file");
         // Load unsigned file and signing certificates from local file.
         DSSDocument toSignDocument = new FileDocument("src/main/resources/test.pdf");
         Pkcs12SignatureToken signingToken = new Pkcs12SignatureToken("src/main/resources/teststore.p12", new KeyStore.PasswordProtection("123456".toCharArray()));
@@ -65,6 +62,7 @@ public class ESignatureController {
 
         InputStreamResource resource = new InputStreamResource(signedFile.openStream());
 
+        logger.info("File signed, downloading...");
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=signed-pdf.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
